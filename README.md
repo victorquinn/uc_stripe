@@ -1,7 +1,11 @@
 
 This is a payment gateway module for Stripe. 
 
+Currently it is only compatible with Drupal 6. Support for Drupal 7 planned, but not yet started.
+
 !! IMPORTANT !!
+===============
+
 This module is a work in progress and as such has not been extensively tested in a production environment. DO NOT INSTALL THIS IN A PRODUCTION ENVIRONMENT. If you want to help test, please do, but do not use it for anything mission critical until it has been tested further.
 
 It has experimental support for the development
@@ -24,11 +28,9 @@ section, and enable the gateway under the Payment Gateways.
 c) On this page, provide the following settings: 
    - Your Stripe API key, private
 
-d) Download and install the latest version of the PHP Stripe library. (https://github.com/stripe/stripe-php) Put it in sites/all/libraries/stripe such that the path to Stripe.php is sites/all/libraries/stripe/lib/Stripe.php
+d) Download and install the latest version of the [PHP Stripe library](https://github.com/stripe/stripe-php). Put it in sites/all/libraries/stripe such that the path to Stripe.php is sites/all/libraries/stripe/lib/Stripe.php
 
-e) If you are using recurring payments, install the uc_recurring module. (http://drupal.org/project/uc_recurring) and set up as described below
-
-Supports recurring payments with uc_recurring 2.x series.
+e) If you are using recurring payments, install version 2.x of the [Ubercart Recurring module](http://drupal.org/project/uc_recurring) and set up as described below
 
 
 Recurring Payments Setup
