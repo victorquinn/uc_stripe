@@ -1,0 +1,9 @@
+name = Stripe
+description = A gateway used to process payments using Stripe. Support for uc_recurring, 6.x-2.x.
+dependencies[] = uc_payment
+dependencies[] = uc_credit
+dependencies[] = libraries
+package = Ubercart - payment
+version = 6.x-1.x-dev
+core = 6.x
+php = 5.0
