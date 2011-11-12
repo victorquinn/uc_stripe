@@ -375,6 +375,23 @@ function uc_stripe_process($order, &$fee) {
     return FALSE;
   }
 
+  // Tricky to find the nid of the recurring product from a cart of other things.
+  // Note, this will only work with a single subscription item in the cart. If
+  // more, it throws an error.
+
+  foreach( $order->products as $product) {
+    if (db_result(db_query("SELECT nid FROM uc_product_features WHERE fid = 'recurring' AND nid = %d", $product->nid))) {
+      $nid[] = $product->nid;
+    }
+  }
+
+  if (count($nid) > 1) {
+    watchdog('uc_stripe', "Multiple subscriptions in cart. User %user warned.", array('%user' => $user->name));
+    drupal_set_message("Currently, only one subscription may be purchased at one time. Please purchase one subscription, then purchase another as a separate order. We apologize for the convenience.", 'error');
+    return FALSE;
+  }
+  $nid = $nid[0];
+
   // Pad the expiration date with a 0 for single digit months.
   if (drupal_strlen($order->payment_details['cc_exp_month']) == 1) {
     $order->payment_details['cc_exp_month'] = '0'. $order->payment_details['cc_exp_month'];
@@ -451,6 +468,7 @@ function uc_stripe_process($order, &$fee) {
       $cust_record->order_id = $order->order_id;
       $cust_record->customer_id = $customer->__get('id');
       $cust_record->plan_id = $plan_id;
+      $cust_record->nid = $nid;
       $cust_record->active = 1;
       drupal_write_record('uc_recurring_stripe', $cust_record);
     }
@@ -465,6 +483,18 @@ function uc_stripe_process($order, &$fee) {
     unset($data['email']);
     unset($data['description']);
     $customer->updateSubscription($data);
+    $customer->description = $customer_name;
+    $customer->save();
+
+    $rfid = db_result(db_query("SELECT rfid FROM {uc_recurring_stripe} WHERE customer_id = '%s'", $customer->__get('id')));
+    $cust_record->uid = $user->uid;
+    $cust_record->order_id = $order->order_id;
+    $cust_record->customer_id = $customer->__get('id');
+    $cust_record->plan_id = $plan_id;
+    $cust_record->nid = $nid;
+    $cust_record->active = 1;
+    drupal_write_record('uc_recurring_stripe', $cust_record);
+
     $result = array(
       'success' => TRUE,
       'message' => t('Recurring Payment set up for this transaction.'),
