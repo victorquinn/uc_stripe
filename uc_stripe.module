@@ -264,6 +264,13 @@ function uc_stripe_settings_form() {
     '#default_value' => variable_get('uc_stripe_testmode', FALSE),
   );
 
+  $form['uc_stripe_settings']['uc_stripe_poweredby']= array(
+    '#type' => 'checkbox',
+    '#title' => t('Powerd by Stripe'),
+    '#description' => 'Show "powered by Stripe in shopping cart.',
+    '#default_value' => variable_get('uc_stripe_poweredby', FALSE),
+  );
+
   if (module_exists('uc_recurring')) {
     $form['uc_stripe_settings']['uc_stripe_cartinfo']= array(
       '#type' => 'checkbox',
