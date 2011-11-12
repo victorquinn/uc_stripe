@@ -79,11 +79,11 @@ function uc_stripe_schema() {
 function uc_stripe_update_6101() {
   $ret = array();
   db_add_field($ret, 'uc_recurring_stripe', 'order_id', array(
-                        'description' => t('The order_id of the purchase.'),
-                        'type' => 'int',
-                        'unsigned' => TRUE,
-                        'not null' => TRUE,
-                      )
+      'description' => t('The order_id of the purchase.'),
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+    )
   );
   return $ret;
 }
@@ -91,16 +91,16 @@ function uc_stripe_update_6101() {
 /**
  * Implementation of hook_update_N()
  *
- * Added order_id to schema.
+ * Added active to schema to indicate subscription status.
  */
 function uc_stripe_update_6102() {
   $ret = array();
   db_add_field($ret, 'uc_recurring_stripe', 'active',array(
-                 'description' => t('Whether or not this subscription is currently active.'),
-                 'type' => 'int',
-                 'unsigned' => TRUE,
-                 'not null' => TRUE,
-               )
+      'description' => t('Whether or not this subscription is currently active.'),
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+    )
   );
   return $ret;
 }
