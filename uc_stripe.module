@@ -42,7 +42,7 @@ function uc_stripe_recurring_info() {
       'charge' => UC_RECURRING_MENU_DEFAULT,
       'edit' => UC_RECURRING_MENU_DEFAULT,
       'cancel' => UC_RECURRING_MENU_DEFAULT,
-    ), // Use the default user operation defined in uc_recurring.
+    ),
   );
   return $items;
 }
@@ -65,7 +65,7 @@ function uc_stripe_form_uc_cart_checkout_form_alter(&$form, &$form_state) {
     if (variable_get('uc_stripe_poweredby', FALSE)) {
       drupal_add_css(drupal_get_path('module', 'uc_stripe') . '/css/uc_stripe.css');
       $message = "<a href='https://stripe.com' target='_blank' class='poweredbylink'><div class='poweredbystripe'>";
-      $message .= "powered by " . theme('image', drupal_get_path('module', 'uc_stripe') . '/images/logo_bare.png', 'powered by Stripe', 'powered by Stripe');
+      $message .= t("powered by") . " " .  theme('image', drupal_get_path('module', 'uc_stripe') . '/images/logo_bare.png', 'powered by Stripe', 'powered by Stripe');
       $message .= "</div></a>";
       $form['panes']['payment']['poweredbystripe'] = array(
         '#type' => 'markup',
@@ -149,6 +149,13 @@ function uc_stripe_cart_item($op, &$item) {
  * Callback Functions, Forms, and Tables
  * *****************************************************************************/
 
+/**
+ * Validate the product feature save. Basically, ensure
+ *  everything is Stripe compatible. Some options are
+ *  not Stripe compatible and we have stripped out the UI
+ *  but we double check to ensure the user has not attempted
+ *  to circumvent those measures.
+ */
 function uc_stripe_product_feature_validate($form, &$form_state) {
 
   // First, ensure the user has selected a SKU
@@ -178,7 +185,8 @@ function uc_stripe_product_feature_validate($form, &$form_state) {
     $form['fee']['fee_amount']['#value'] = $form_state['values']['product_price'];
   }
 
-  // We want to programmatically create a Stripe subscription plan for this item.
+  // We want to programmatically create a Stripe subscription plan
+  //  for this item.
   if (!_uc_stripe_load_api()) {
     form_set_error('', "There was a problem loading the Stripe API. Recurring feature could not be created. Please ensure the API is in sites/all/libraries/stripe.");
     return FALSE;
@@ -357,6 +365,9 @@ function uc_stripe_charge($order_id, $amount, $data) {
 
 /* uc_recurring callbacks */
 
+/**
+ * Process the recurring fee transaction.
+ */
 function uc_stripe_process($order, &$fee) {
   global $user;
   $plan_id = str_replace('/', '_', $fee->data['model']);
@@ -389,15 +400,16 @@ function uc_stripe_process($order, &$fee) {
     }
   }
 
-  // If no match, this recurring item doesn't correlate to any Stripe subscription plan
+  // If no match, this recurring item doesn't correlate to any
+  //  Stripe subscription plan
   if (!$match) {
     watchdog('uc_stripe', "The sku for the Recurring Fee object doesn't match any Stripe plans.");
     return FALSE;
   }
 
-  // Tricky to find the nid of the recurring product from a cart of other things.
-  // Note, this will only work with a single subscription item in the cart. If
-  // more, it throws an error.
+  // Tricky to find the nid of the recurring product from a cart of
+  //  other things. Note, this will only work with a single
+  //  subscription item in the cart. If more, it throws an error.
 
   foreach ($order->products as $product) {
     if (db_result(db_query("SELECT nid FROM {uc_product_features} WHERE fid = 'recurring' AND nid = %d", $product->nid))) {
