@@ -1,5 +1,4 @@
 <?php
-//$Id$
 
 /**
  * @file
@@ -12,7 +11,7 @@
  * *****************************************************************************/
 
 /**
- * Implementation of hook_payment_gateway(), from uc_credit
+ * Implements hook_payment_gateway().
  */
 function uc_stripe_payment_gateway() {
   $gateways = array();
@@ -27,7 +26,7 @@ function uc_stripe_payment_gateway() {
 }
 
 /**
- * Implementation of hook_recurring_info()
+ * Implements hook_recurring_info().
  */
 function uc_stripe_recurring_info() {
   $items['uc_stripe'] = array(
@@ -49,7 +48,7 @@ function uc_stripe_recurring_info() {
 }
 
 /**
- * Implementation of hook_form_alter()
+ * Implements hook_form_FORM_ID_alter().
  */
 function uc_stripe_form_uc_cart_checkout_form_alter(&$form, &$form_state) {
   // If testmode is enabled, display a message on checkout.
@@ -60,7 +59,7 @@ function uc_stripe_form_uc_cart_checkout_form_alter(&$form, &$form_state) {
       $message .= "</div>";
       $form['panes']['testmode'] = array(
         '#type' => 'markup',
-        '#value' => $message,
+        '#value' => check_plain($message),
       );
     }
     if (variable_get('uc_stripe_poweredby', FALSE)) {
@@ -70,14 +69,14 @@ function uc_stripe_form_uc_cart_checkout_form_alter(&$form, &$form_state) {
       $message .= "</div></a>";
       $form['panes']['payment']['poweredbystripe'] = array(
         '#type' => 'markup',
-        '#value' => $message,
+        '#value' => check_plain($message),
       );
     }
   }
 }
 
 /**
- * Implementation of hook_form_alter()
+ * Implements hook_form_FORM_ID_alter().
  */
 function uc_stripe_form_uc_recurring_product_feature_form_alter(&$form, &$form_state) {
   // Disable days and weeks because Stripe has no notion of them.
@@ -97,7 +96,7 @@ function uc_stripe_form_uc_recurring_product_feature_form_alter(&$form, &$form_s
 }
 
 /**
- * Implementation of hook_form_alter()
+ * Implements hook_form_FORM_ID_alter().
  */
 function uc_stripe_form_uc_cart_view_form_alter(&$form, &$form_state) {
   if (module_exists('uc_recurring')) {
@@ -119,7 +118,7 @@ function uc_stripe_form_uc_cart_view_form_alter(&$form, &$form_state) {
 }
 
 /**
- * Implementation of hook_form_alter()
+ * Implements hook_form_FORM_ID_alter().
  */
 function uc_stripe_form_uc_recurring_payment_form_alter(&$form, &$form_state) {
   if (module_exists('uc_recurring')) {
@@ -131,7 +130,7 @@ function uc_stripe_form_uc_recurring_payment_form_alter(&$form, &$form_state) {
 }
 
 /**
- * Implementation of hook_cart_item()
+ * Implements hook_cart_item().
  */
 function uc_stripe_cart_item($op, &$item) {
   if (module_exists('uc_recurring')) {
@@ -221,7 +220,7 @@ function uc_stripe_product_feature_validate($form, &$form_state) {
     try {
       $plan->delete();
     }
-    catch (Exception $e){
+    catch (Exception $e) {
       form_set_error('', t("There was a problem updating your plan with Stripe: %error", array("%error" => $e->getMessage())));
     }
   }
@@ -234,7 +233,7 @@ function uc_stripe_product_feature_validate($form, &$form_state) {
     $data = array(
       'amount' => $fee,
       'interval' => substr($form_state['values']['regular_interval_unit'], 0, -1),
-      'name' =>$node->title,
+      'name' => $node->title,
       'currency' => 'usd',
       'id' => $plan_id,
     );
@@ -400,8 +399,8 @@ function uc_stripe_process($order, &$fee) {
   // Note, this will only work with a single subscription item in the cart. If
   // more, it throws an error.
 
-  foreach( $order->products as $product) {
-    if (db_result(db_query("SELECT nid FROM uc_product_features WHERE fid = 'recurring' AND nid = %d", $product->nid))) {
+  foreach ($order->products as $product) {
+    if (db_result(db_query("SELECT nid FROM {uc_product_features} WHERE fid = 'recurring' AND nid = %d", $product->nid))) {
       $nid[] = $product->nid;
     }
   }
@@ -494,7 +493,7 @@ function uc_stripe_process($order, &$fee) {
       drupal_write_record('uc_recurring_stripe', $cust_record);
     }
     catch (Exception $e) {
-      drupal_set_message("Unable to create new customer object: " . $e->getMessage(), 'error');
+      drupal_set_message("Unable to create new customer object: " . check_plain($e->getMessage()), 'error');
       watchdog('uc_stripe', "Unable to create new customer object for %customer_name", array('%customer_name' => $customer_name));
       return FALSE;
     }
@@ -592,7 +591,7 @@ function uc_stripe_cancel($order, $op) {
     drupal_write_record('uc_recurring_stripe', $cust_record, array('rfid'));
   }
   catch (Exception $e) {
-    drupal_set_message("Unable to retrieve customer subscription: " . $e->getMessage(), 'error');
+    drupal_set_message("Unable to retrieve customer subscription: " . check_plain($e->getMessage()), 'error');
     watchdog('uc_stripe', "Unable to retrieve customer subscription for %customer_id", array('%customer_id' => $customer_id));
     return FALSE;
   }

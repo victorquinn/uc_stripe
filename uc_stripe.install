@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Installation file for the uc_stripe module.
+ */
+
+/**
  * Implementation of hook_install()
  */
 function uc_stripe_install() {
