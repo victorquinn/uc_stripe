@@ -54,22 +54,20 @@ function uc_stripe_form_uc_cart_checkout_form_alter(&$form, &$form_state) {
   // If testmode is enabled, display a message on checkout.
   if (uc_credit_default_gateway() == 'uc_stripe') {
     if (variable_get('uc_stripe_testmode', FALSE)) {
-      $message = "<div class='messages' style='background-color:#BEEBBF'>";
-      $message .= t("Test mode is <strong>ON</strong> for the Stripe Payment Gateway. Your credit card will not be charged. To change this setting, edit the !link", array('!link' => l("Stripe settings", "admin/store/settings/payment/edit/gateways")));
-      $message .= "</div>";
       $form['panes']['testmode'] = array(
+        '#prefix' => "<div class='messages' style='background-color:#BEEBBF'>",
         '#type' => 'markup',
-        '#value' => filter_xss($message),
+        '#value' => t("Test mode is <strong>ON</strong> for the Stripe Payment Gateway. Your credit card will not be charged. To change this setting, edit the !link", array('!link' => l("Stripe settings", "admin/store/settings/payment/edit/gateways"))),
+        '#suffix' => "</div>",
       );
     }
     if (variable_get('uc_stripe_poweredby', FALSE)) {
       drupal_add_css(drupal_get_path('module', 'uc_stripe') . '/css/uc_stripe.css');
-      $message = "<a href='https://stripe.com' target='_blank' class='poweredbylink'><div class='poweredbystripe'>";
-      $message .= t("powered by") . " " . theme('image', drupal_get_path('module', 'uc_stripe') . '/images/logo_bare.png', 'powered by Stripe', 'powered by Stripe');
-      $message .= "</div></a>";
       $form['panes']['payment']['poweredbystripe'] = array(
+        '#prefix' => "<a href='https://stripe.com' target='_blank' class='poweredbylink'><div class='poweredbystripe'>",
         '#type' => 'markup',
-        '#value' => filter_xss($message),
+        '#value' => t("powered by"),
+        '#suffix' => " " . theme('image', drupal_get_path('module', 'uc_stripe') . '/images/logo_bare.png', 'powered by Stripe', 'powered by Stripe') . "</div></a>",
       );
     }
   }
@@ -287,8 +285,8 @@ function uc_stripe_settings_form() {
 
   $form['uc_stripe_settings']['uc_stripe_poweredby']= array(
     '#type' => 'checkbox',
-    '#title' => t('Powerd by Stripe'),
-    '#description' => 'Show "powered by Stripe in shopping cart.',
+    '#title' => t('Powered by Stripe'),
+    '#description' => 'Show "powered by Stripe" in shopping cart.',
     '#default_value' => variable_get('uc_stripe_poweredby', FALSE),
   );
 
