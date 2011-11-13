@@ -59,7 +59,7 @@ function uc_stripe_form_uc_cart_checkout_form_alter(&$form, &$form_state) {
       $message .= "</div>";
       $form['panes']['testmode'] = array(
         '#type' => 'markup',
-        '#value' => check_plain($message),
+        '#value' => $message,
       );
     }
     if (variable_get('uc_stripe_poweredby', FALSE)) {
@@ -69,7 +69,7 @@ function uc_stripe_form_uc_cart_checkout_form_alter(&$form, &$form_state) {
       $message .= "</div></a>";
       $form['panes']['payment']['poweredbystripe'] = array(
         '#type' => 'markup',
-        '#value' => check_plain($message),
+        '#value' => $message,
       );
     }
   }
