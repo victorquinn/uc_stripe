@@ -65,9 +65,9 @@ function uc_stripe_form_uc_cart_checkout_form_alter(&$form, &$form_state) {
     }
     if (variable_get('uc_stripe_poweredby', FALSE)) {
       drupal_add_css(drupal_get_path('module', 'uc_stripe') . '/css/uc_stripe.css');
-      $message = "<div class='poweredbystripe'>";
+      $message = "<a href='https://stripe.com' target='_blank' class='poweredbylink'><div class='poweredbystripe'>";
       $message .= "powered by " . theme('image', drupal_get_path('module', 'uc_stripe') . '/images/logo_bare.png', 'powered by Stripe', 'powered by Stripe');
-      $message .= "</div>";
+      $message .= "</div></a>";
       $form['panes']['payment']['poweredbystripe'] = array(
         '#type' => 'markup',
         '#value' => $message,
