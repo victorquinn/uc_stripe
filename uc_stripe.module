@@ -59,17 +59,17 @@ function uc_stripe_form_uc_cart_checkout_form_alter(&$form, &$form_state) {
       $message .= "</div>";
       $form['panes']['testmode'] = array(
         '#type' => 'markup',
-        '#value' => $message,
+        '#value' => filter_xss($message),
       );
     }
     if (variable_get('uc_stripe_poweredby', FALSE)) {
       drupal_add_css(drupal_get_path('module', 'uc_stripe') . '/css/uc_stripe.css');
       $message = "<a href='https://stripe.com' target='_blank' class='poweredbylink'><div class='poweredbystripe'>";
-      $message .= t("powered by") . " " .  theme('image', drupal_get_path('module', 'uc_stripe') . '/images/logo_bare.png', 'powered by Stripe', 'powered by Stripe');
+      $message .= t("powered by") . " " . theme('image', drupal_get_path('module', 'uc_stripe') . '/images/logo_bare.png', 'powered by Stripe', 'powered by Stripe');
       $message .= "</div></a>";
       $form['panes']['payment']['poweredbystripe'] = array(
         '#type' => 'markup',
-        '#value' => $message,
+        '#value' => filter_xss($message),
       );
     }
   }
@@ -104,7 +104,7 @@ function uc_stripe_form_uc_cart_view_form_alter(&$form, &$form_state) {
       if (variable_get('uc_stripe_cartinfo', TRUE)) {
         foreach ($form['items'] as $key => $item) {
           if (isset($item['nid']['#value'])) {
-            if (db_result(db_query("SELECT COUNT(*) FROM {uc_recurring_stripe} WHERE nid = %d", $item['nid']['#value']))) {
+            if (db_result(db_query("SELECT * FROM {uc_recurring_stripe} WHERE nid = %d", $item['nid']['#value']))) {
               $title = _uc_stripe_fancy_name($item['nid']['#value']);
               if (isset($title)) {
                 $form['items'][$key]['desc']['#value'] = l($title, 'node/' . $nid);
@@ -136,7 +136,7 @@ function uc_stripe_cart_item($op, &$item) {
   if (module_exists('uc_recurring')) {
     if (uc_credit_default_gateway() == 'uc_stripe') {
       if (variable_get('uc_stripe_cartinfo', TRUE)) {
-        if (db_result(db_query("SELECT COUNT(*) FROM {uc_recurring_stripe} WHERE nid = %d", $item->nid))) {
+        if (db_result(db_query("SELECT * FROM {uc_recurring_stripe} WHERE nid = %d", $item->nid))) {
           $item->title = _uc_stripe_fancy_name($item->nid);
         }
       }
@@ -240,7 +240,7 @@ function uc_stripe_product_feature_validate($form, &$form_state) {
   try {
     $data = array(
       'amount' => $fee,
-      'interval' => substr($form_state['values']['regular_interval_unit'], 0, -1),
+      'interval' => drupal_substr($form_state['values']['regular_interval_unit'], 0, -1),
       'name' => $node->title,
       'currency' => 'usd',
       'id' => $plan_id,
@@ -311,7 +311,7 @@ function uc_stripe_charge($order_id, $amount, $data) {
 
   // Pad the expiration date with a 0 for single digit months.
   if (drupal_strlen($order->payment_details['cc_exp_month']) == 1) {
-    $order->payment_details['cc_exp_month'] = '0'. $order->payment_details['cc_exp_month'];
+    $order->payment_details['cc_exp_month'] = '0' . $order->payment_details['cc_exp_month'];
   }
   // set up minimum fields
   $data = array(
@@ -419,19 +419,19 @@ function uc_stripe_process($order, &$fee) {
 
   if (count($nid) > 1) {
     watchdog('uc_stripe', "Multiple subscriptions in cart. User %user warned.", array('%user' => $user->name));
-    drupal_set_message("Currently, only one subscription may be purchased at one time. Please purchase one subscription, then purchase another as a separate order. We apologize for the convenience.", 'error');
+    drupal_set_message(t("Currently, only one subscription may be purchased at one time. Please purchase one subscription, then purchase another as a separate order. We apologize for the convenience."), 'error');
     return FALSE;
   }
   $nid = $nid[0];
 
   // Pad the expiration date with a 0 for single digit months.
   if (drupal_strlen($order->payment_details['cc_exp_month']) == 1) {
-    $order->payment_details['cc_exp_month'] = '0'. $order->payment_details['cc_exp_month'];
+    $order->payment_details['cc_exp_month'] = '0' . $order->payment_details['cc_exp_month'];
   }
 
   // Pad the expiration date with a 0 for single digit months.
   if (drupal_strlen($order->payment_details['cc_exp_month']) == 1) {
-    $order->payment_details['cc_exp_month'] = '0'. $order->payment_details['cc_exp_month'];
+    $order->payment_details['cc_exp_month'] = '0' . $order->payment_details['cc_exp_month'];
   }
   // set up minimum fields
   $data = array(
@@ -460,10 +460,8 @@ function uc_stripe_process($order, &$fee) {
     $create_new = TRUE;
   }
   else {
-    // See if this person is an existing customer.
-    $sub_num = db_result(db_query("SELECT COUNT(*) FROM {uc_recurring_stripe} WHERE uid = %d", $user->uid));
     // Retrieve existing subscriptions
-    if ($sub_num) {
+    if (db_result(db_query("SELECT COUNT(*) FROM {uc_recurring_stripe} WHERE uid = %d", $user->uid))) {
       $result = db_query("SELECT * FROM {uc_recurring_stripe} WHERE uid = %d", $user->uid);
       while ($sub = db_fetch_object($result)) {
         if ($sub->plan_id == $plan_id) {
@@ -475,7 +473,7 @@ function uc_stripe_process($order, &$fee) {
           $customer = Stripe_Customer::retrieve($customer_id);
         }
         catch (Exception $e) {
-          drupal_set_message("Unable to retrieve customer subscription", 'error');
+          drupal_set_message(t("Unable to retrieve customer subscription"), 'error');
           watchdog('uc_stripe', "Unable to retrieve customer subscription for %customer_id", array('%customer_id' => $customer_id));
           return FALSE;
         }
@@ -505,7 +503,7 @@ function uc_stripe_process($order, &$fee) {
       drupal_write_record('uc_recurring_stripe', $cust_record);
     }
     catch (Exception $e) {
-      drupal_set_message("Unable to create new customer object: " . check_plain($e->getMessage()), 'error');
+      drupal_set_message(t("Unable to create new customer object: @message", array("@message", $e->getMessage())), 'error');
       watchdog('uc_stripe', "Unable to create new customer object for %customer_name", array('%customer_name' => $customer_name));
       return FALSE;
     }
@@ -559,7 +557,7 @@ function uc_stripe_process($order, &$fee) {
  * which was returned by Stripe as a handle/identifier for the customer's stored credit card info
  */
 function uc_stripe_renew($order, &$fee) {
-  drupal_set_message(t("The renewing payments are managed at !url. No renewal charge initiated.", array('!url' => l('manage.stripe.com', 'http://manage.stripe.com'))), 'error');
+  drupal_set_message(t("The renewing payments are managed at @url. No renewal charge initiated.", array('@url' => l(t('manage.stripe.com'), 'http://manage.stripe.com'))), 'error');
   return FALSE;
 }
 
@@ -603,7 +601,7 @@ function uc_stripe_cancel($order, $op) {
     drupal_write_record('uc_recurring_stripe', $cust_record, array('rfid'));
   }
   catch (Exception $e) {
-    drupal_set_message("Unable to retrieve customer subscription: " . check_plain($e->getMessage()), 'error');
+    drupal_set_message(t("Unable to retrieve customer subscription: @message", array("@message" => $e->getMessage())), 'error');
     watchdog('uc_stripe', "Unable to retrieve customer subscription for %customer_id", array('%customer_id' => $customer_id));
     return FALSE;
   }
@@ -651,14 +649,15 @@ function _uc_stripe_convert_trial_period($value, $unit) {
 function _uc_stripe_fancy_name($nid) {
   $pfid = db_result(db_query("SELECT pfid FROM {uc_product_features} WHERE nid = %d", $nid));
   if ($pfid) {
-    $recurring = db_result(db_query("SELECT COUNT(*) FROM {uc_recurring_product} WHERE pfid = %d", $pfid));
+    $recurring = db_result(db_query("SELECT * FROM {uc_recurring_product} WHERE pfid = %d", $pfid));
     if ($recurring) {
       $result = db_query("SELECT * FROM {uc_recurring_product} WHERE pfid = %d", $pfid);
       $recurring = db_fetch_object($result);
-      // If this product is recurring, we want to add the info to its title display
+      // If this product is recurring, we want to add the info to
+      //  its title display.
       $node = node_load($nid);
       $product = uc_product_load($node);
-      $interval = substr($recurring->regular_interval, 2, -1);
+      $interval = drupal_substr($recurring->regular_interval, 2, -1);
       $fee = number_format($recurring->fee_amount, 2);
       $title = "{$node->title} (\${$fee}/{$interval} starting in {$recurring->initial_charge})";
       return $title;
