@@ -105,9 +105,11 @@ function uc_stripe_form_uc_cart_view_form_alter(&$form, &$form_state) {
       if (variable_get('uc_stripe_cartinfo', TRUE)) {
         foreach ($form['items'] as $key => $item) {
           if (isset($item['nid']['#value'])) {
-            $title = _uc_stripe_fancy_name($item['nid']['#value']);
-            if (isset($title)) {
-              $form['items'][$key]['desc']['#value'] = l($title, 'node/' . $nid);
+            if (db_result(db_query("SELECT COUNT(*) FROM {uc_recurring_stripe} WHERE nid = %d", $item['nid']['#value']))) {
+              $title = _uc_stripe_fancy_name($item['nid']['#value']);
+              if (isset($title)) {
+                $form['items'][$key]['desc']['#value'] = l($title, 'node/' . $nid);
+              }
             }
           }
         }
@@ -135,7 +137,9 @@ function uc_stripe_cart_item($op, &$item) {
   if (module_exists('uc_recurring')) {
     if (uc_credit_default_gateway() == 'uc_stripe') {
       if (variable_get('uc_stripe_cartinfo', TRUE)) {
-        $item->title = _uc_stripe_fancy_name($item->nid);
+        if (db_result(db_query("SELECT COUNT(*) FROM {uc_recurring_stripe} WHERE nid = %d", $item->nid))) {
+          $item->title = _uc_stripe_fancy_name($item->nid);
+        }
       }
     }
   }

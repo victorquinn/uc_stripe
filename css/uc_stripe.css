@@ -1,12 +1,14 @@
 .poweredbystripe {
+    margin-top: 10px;
     float: right;
     background: #066EE1;
     background: #017aff;
-    height: 49px;
-    padding: 0 20px;
-    line-height: 47px;
+    height: 27px;
+    padding: 0 10px;
+    line-height: 27px;
     display: block;
     color: #fff;
+    vertical-align: top;
     font-weight: bold;
     font-size: 12px;
     text-shadow: 0 -1px 0 rgba(0,0,0,0.5);
@@ -16,6 +18,9 @@
     background-image: -moz-linear-gradient(-90deg, #78b8ff, #017aff);
     -moz-border-radius: 30px;
     -moz-box-shadow: inset 0 1px 0 #98c9ff;
+}
+
+.poweredbylink {
 }
 
 a.poweredbylink:hover {
