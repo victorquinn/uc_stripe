@@ -3,12 +3,13 @@
 /**
  * @file
  * A module used for Stripe.
- * Developed by Victor Quinn/Health for Hackers (http://www.healthforhackers.com)
+ * Developed by Victor Quinn
+ *  for Health for Hackers (http://www.healthforhackers.com)
  */
 
-/*******************************************************************************
+/***********************************************************
  * Hook Functions (Ubercart)
- * *****************************************************************************/
+ * *********************************************************/
 
 /**
  * Implements hook_payment_gateway().
@@ -77,7 +78,7 @@ function uc_stripe_form_uc_cart_checkout_form_alter(&$form, &$form_state) {
  * Implements hook_form_FORM_ID_alter().
  */
 function uc_stripe_form_uc_recurring_product_feature_form_alter(&$form, &$form_state) {
-  // Disable days and weeks because Stripe has no notion of them.
+  // Disable days and weeks as Stripe has no notion of them
   unset($form['interval']['regular']['regular_interval_unit']['#options']['days']);
   unset($form['interval']['regular']['regular_interval_unit']['#options']['weeks']);
 
@@ -143,9 +144,9 @@ function uc_stripe_cart_item($op, &$item) {
 }
 
 
-/*******************************************************************************
+/***********************************************************
  * Callback Functions, Forms, and Tables
- * *****************************************************************************/
+ * *********************************************************/
 
 /**
  * Validate the product feature save. Basically, ensure
@@ -213,15 +214,18 @@ function uc_stripe_product_feature_validate($form, &$form_state) {
      * Delete that plan (Note: Deleting a plan doesn't truly delete it.
      *  It does not affect current subscribers of that plan, it just means
      *  no new subscribers can be added to that plan. But that's fine because
-     *  we will have a new plan created a few lines down to which new subscribers
-     *  will be added. For more info, see the Stripe api (https://stripe.com/docs/api#delete_plan)
+     *  we will have a new plan created a few lines down to which new
+     *  subscribers will be added. For more info, see the Stripe api:
+     *    https://stripe.com/docs/api#delete_plan)
      *
-     * For a high overview, think about it like this. You don't have authorization
-     *  from users on a current plan to change the billing amount. So we cannot
-     *  just "change" the amount of the plan. We are authorized to bill them $9.99/month
-     *  cannot just edit it programmatically to say, "You are now charged $15.99/month".
-     *  So Stripe requires you to "delete" then "create" which deletes that version of the
-     *  plan so no new users get access, then create a new one, here with the same name.
+     * For a high overview, think about it like this. You don't have
+     *  authorization from users on a current plan to change the billing
+     *  amount. So we cannot just "change" the amount of the plan. We are
+     *  authorized to bill them $9.99/month cannot just edit it
+     *  programmatically to say, "You are now charged $15.99/month".
+     *  So Stripe requires you to "delete" then "create" which deletes
+     *  that version of the plan so no new users get access, then create
+     *  a new one, here with the same name.
      */
     try {
       $plan->delete();
@@ -276,14 +280,14 @@ function uc_stripe_settings_form() {
     '#description' => t('Your Production Stripe API Key. Must be the "secret" key, not the "publishable" one.'),
   );
 
-  $form['uc_stripe_settings']['uc_stripe_testmode']= array(
+  $form['uc_stripe_settings']['uc_stripe_testmode'] = array(
     '#type' => 'checkbox',
     '#title' => t('Test mode'),
     '#description' => 'Testing Mode: Stripe will use the development API key to process the transaction so the card will not actually be charged.',
     '#default_value' => variable_get('uc_stripe_testmode', FALSE),
   );
 
-  $form['uc_stripe_settings']['uc_stripe_poweredby']= array(
+  $form['uc_stripe_settings']['uc_stripe_poweredby'] = array(
     '#type' => 'checkbox',
     '#title' => t('Powered by Stripe'),
     '#description' => 'Show "powered by Stripe" in shopping cart.',
@@ -291,7 +295,7 @@ function uc_stripe_settings_form() {
   );
 
   if (module_exists('uc_recurring')) {
-    $form['uc_stripe_settings']['uc_stripe_cartinfo']= array(
+    $form['uc_stripe_settings']['uc_stripe_cartinfo'] = array(
       '#type' => 'checkbox',
       '#title' => t('Show additional info about recurring item in shopping cart'),
       '#default_value' => variable_get('uc_stripe_cartinfo', TRUE),
@@ -300,7 +304,7 @@ function uc_stripe_settings_form() {
   return $form;
 }
 
-/*
+/**
  * uc_credit callback for creating an actual credit card charge
  */
 function uc_stripe_charge($order_id, $amount, $data) {
@@ -313,7 +317,7 @@ function uc_stripe_charge($order_id, $amount, $data) {
   }
   // set up minimum fields
   $data = array(
-    'amount' => intval($amount*100),
+    'amount' => intval($amount * 100),
     'currency' => 'usd',
     'card' => array(
       'number' => $order->payment_details['cc_number'],
@@ -459,7 +463,7 @@ function uc_stripe_process($order, &$fee) {
   }
   else {
     // Retrieve existing subscriptions
-    if (db_result(db_query("SELECT COUNT(*) FROM {uc_recurring_stripe} WHERE uid = %d", $user->uid))) {
+    if (db_result(db_query("SELECT * FROM {uc_recurring_stripe} WHERE uid = %d", $user->uid))) {
       $result = db_query("SELECT * FROM {uc_recurring_stripe} WHERE uid = %d", $user->uid);
       while ($sub = db_fetch_object($result)) {
         if ($sub->plan_id == $plan_id) {
@@ -526,7 +530,7 @@ function uc_stripe_process($order, &$fee) {
     $result = array(
       'success' => TRUE,
       'message' => t('Recurring Payment set up for this transaction.'),
-      'uid' => $user->uid
+      'uid' => $user->uid,
     );
     watchdog('uc_stripe', "Recurring payment created for %customer_name for %plan.", array('%customer_name' => $customer_name, '%plan' => $plan_id));
   }
@@ -550,9 +554,10 @@ function uc_stripe_process($order, &$fee) {
 }
 
 
-/*
- * Actual function that initiates a recurring fee. Uses the TransID stored in uc_stripe_process,
- * which was returned by Stripe as a handle/identifier for the customer's stored credit card info
+/**
+ * Actual function that initiates a recurring fee. Uses the TransID stored in
+ *  uc_stripe_process, which was returned by Stripe as a handle/identifier for
+ *  the customer's stored credit card info
  */
 function uc_stripe_renew($order, &$fee) {
   drupal_set_message(t("The renewing payments are managed at @url. No renewal charge initiated.", array('@url' => l(t('manage.stripe.com'), 'http://manage.stripe.com'))), 'error');
@@ -609,11 +614,11 @@ function uc_stripe_cancel($order, $op) {
   return FALSE;
 }
 
-/*******************************************************************************
+/***********************************************************
  * Private Functions
- * *****************************************************************************/
+ * *********************************************************/
 
-/*
+/**
  * Convert trial period from any unit to days which Stripe expects.
  */
 function _uc_stripe_convert_trial_period($value, $unit) {
@@ -664,13 +669,13 @@ function _uc_stripe_fancy_name($nid) {
   return FALSE;
 }
 
-/*
+/**
  * Load the Stripe API, assign the key
  */
 function _uc_stripe_load_api() {
   if ($path = libraries_get_path('stripe')) {
     // Load Stripe
-    require_once($path . '/lib/Stripe.php');
+    include_once $path . '/lib/Stripe.php';
   }
   else {
     watchdog('uc_stripe', 'Stripe Library not found. Please download into sites/all/libraries/stripe', 'warning');
@@ -693,8 +698,8 @@ function _uc_stripe_load_api() {
   return TRUE;
 }
 
-/*
- * Post transactions to Stripe using this function. Handles both one-time charges and recurring charges.
+/**
+ * Post transactions to Stripe using this function.
  */
 function _uc_stripe_post_transaction($order_id, $data) {
   global $user;
