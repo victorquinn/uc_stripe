@@ -11,8 +11,8 @@
 function uc_stripe_install() {
   drupal_install_schema('uc_stripe');
   // This turns off the uc_recurring cron task to renew. We want this
-  //  off because the renewal payments are handled by Stripe and initiating
-  //  them separately will cause a mess.
+  // off because the renewal payments are handled by Stripe and initiating
+  // them separately will cause a mess.
   variable_set('uc_recurring_trigger_renewals', FALSE);
 }
 

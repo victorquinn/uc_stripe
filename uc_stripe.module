@@ -78,7 +78,7 @@ function uc_stripe_form_uc_cart_checkout_form_alter(&$form, &$form_state) {
  * Implements hook_form_FORM_ID_alter().
  */
 function uc_stripe_form_uc_recurring_product_feature_form_alter(&$form, &$form_state) {
-  // Disable days and weeks as Stripe has no notion of them
+  // Disable days and weeks as Stripe has no notion of them.
   unset($form['interval']['regular']['regular_interval_unit']['#options']['days']);
   unset($form['interval']['regular']['regular_interval_unit']['#options']['weeks']);
 
@@ -157,7 +157,7 @@ function uc_stripe_cart_item($op, &$item) {
  */
 function uc_stripe_product_feature_validate($form, &$form_state) {
 
-  // First, ensure the user has selected a SKU
+  // First, ensure the user has selected a SKU.
   if ($form_state['values']['model'] == '') {
     form_set_error('model', "You must select an Applicable SKU for payments to work with Stripe.");
     return FALSE;
@@ -177,15 +177,15 @@ function uc_stripe_product_feature_validate($form, &$form_state) {
   $form_state['values']['number_intervals'] = -1;
 
   $fee = $form_state['values']['fee_same_product'] ?
-    intval(100*floatval($form_state['values']['product_price'])) :
-    intval(100*floatval($form_state['values']['fee_amount']));
+    intval(100 * floatval($form_state['values']['product_price'])) :
+    intval(100 * floatval($form_state['values']['fee_amount']));
 
   if ($form_state['values']['fee_same_product']) {
     $form['fee']['fee_amount']['#value'] = $form_state['values']['product_price'];
   }
 
   // We want to programmatically create a Stripe subscription plan
-  //  for this item.
+  // for this item.
   if (!_uc_stripe_load_api()) {
     form_set_error('', "There was a problem loading the Stripe API. Recurring feature could not be created. Please ensure the API is in sites/all/libraries/stripe.");
     return FALSE;
@@ -195,12 +195,12 @@ function uc_stripe_product_feature_validate($form, &$form_state) {
   $product = uc_product_load($node);
 
   // We have to convert forward slashes to underscores because stripe
-  //  has a bug as confirmed by the stripe staff. Basically, no plans
-  //  with forward slashes in their plan id can be retrieved.
+  // has a bug as confirmed by the stripe staff. Basically, no plans
+  // with forward slashes in their plan id can be retrieved.
   // Once Stripe fixes things on their end, this can be removed.
   $plan_id = str_replace('/', '_', $product->model);
 
-  // See if a plan like this already exists
+  // See if a plan like this already exists.
   $plan_exists = TRUE;
   try {
     $plan = Stripe_Plan::retrieve($plan_id);
@@ -235,10 +235,10 @@ function uc_stripe_product_feature_validate($form, &$form_state) {
     }
   }
 
-  // Convert trial period to days
+  // Convert trial period to days.
   $trial = _uc_stripe_convert_trial_period($form_state['values']['initial_charge_value'], $form_state['values']['initial_charge_unit']);
 
-  // Create a new plan
+  // Create a new plan.
   try {
     $data = array(
       'amount' => $fee,
@@ -315,7 +315,7 @@ function uc_stripe_charge($order_id, $amount, $data) {
   if (drupal_strlen($order->payment_details['cc_exp_month']) == 1) {
     $order->payment_details['cc_exp_month'] = '0' . $order->payment_details['cc_exp_month'];
   }
-  // set up minimum fields
+  // Set up minimum fields.
   $data = array(
     'amount' => intval($amount * 100),
     'currency' => 'usd',
@@ -331,7 +331,7 @@ function uc_stripe_charge($order_id, $amount, $data) {
     'description' => "{$order->primary_email}; OrderID: {$order_id}",
   );
 
-  // Load the Stripe API and set the API key
+  // Load the Stripe API and set the API key.
   if (!_uc_stripe_load_api()) {
     $result = array(
       'success' => FALSE,
@@ -343,13 +343,13 @@ function uc_stripe_charge($order_id, $amount, $data) {
     return $result;
   }
 
-  // cvv
+  // CVV Number (if enabled).
   if (variable_get('uc_credit_cvv_enabled', TRUE)) {
     $data['card']['cvc'] = $order->payment_details['cc_cvv'];
   }
 
   // Stripe can't handle transactions < $0.50, but $0 is a common value
-  //  so we will just return a positive result when the amount is $0.
+  // so we will just return a positive result when the amount is $0.
   if ($amount == 0) {
     $result = array(
       'success' => TRUE,
@@ -375,19 +375,19 @@ function uc_stripe_process($order, &$fee) {
   $plan_id = str_replace('/', '_', $fee->data['model']);
   $customer_name = $order->billing_first_name . ' ' . $order->billing_last_name;
 
-  // Load the Stripe API and set the API key
+  // Load the Stripe API and set the API key.
   if (!_uc_stripe_load_api()) {
     return FALSE;
   }
 
-  // First, check to see that a sku is tied to this recurring fee item
+  // First, check to see that a sku is tied to this recurring fee item.
   if (!isset($fee->data['model'])) {
     watchdog('uc_stripe', "You must set the applicable sku in the Recurring Fee setup. This must be the same as the Plan name in Stripe.");
     return FALSE;
   }
 
   try {
-    // Then ensure it matches one of the plans in Stripe
+    // Then ensure it matches one of the plans in Stripe.
     $plans = Stripe_Plan::all();
   }
   catch (Exception $e) {
@@ -403,16 +403,15 @@ function uc_stripe_process($order, &$fee) {
   }
 
   // If no match, this recurring item doesn't correlate to any
-  //  Stripe subscription plan
+  // Stripe subscription plan.
   if (!$match) {
     watchdog('uc_stripe', "The sku for the Recurring Fee object doesn't match any Stripe plans.");
     return FALSE;
   }
 
   // Tricky to find the nid of the recurring product from a cart of
-  //  other things. Note, this will only work with a single
-  //  subscription item in the cart. If more, it throws an error.
-
+  // other things. Note, this will only work with a single
+  // subscription item in the cart. If more, it throws an error.
   foreach ($order->products as $product) {
     if (db_result(db_query("SELECT nid FROM {uc_product_features} WHERE fid = 'recurring' AND nid = %d", $product->nid))) {
       $nid[] = $product->nid;
@@ -435,7 +434,7 @@ function uc_stripe_process($order, &$fee) {
   if (drupal_strlen($order->payment_details['cc_exp_month']) == 1) {
     $order->payment_details['cc_exp_month'] = '0' . $order->payment_details['cc_exp_month'];
   }
-  // set up minimum fields
+  // Set up minimum fields.
   $data = array(
     'plan' => $plan_id,
     'card' => array(
@@ -449,12 +448,10 @@ function uc_stripe_process($order, &$fee) {
     ),
   );
 
-  // cvv
+  // CVV Number (if enabled).
   if (variable_get('uc_credit_cvv_enabled', TRUE)) {
     $data['card']['cvc'] = $order->payment_details['cc_cvv'];
   }
-
-  // Get the existing plan_id
 
   // This user is not logged in, so create new subscription.
   $create_new = FALSE;
@@ -462,7 +459,7 @@ function uc_stripe_process($order, &$fee) {
     $create_new = TRUE;
   }
   else {
-    // Retrieve existing subscriptions
+    // Retrieve existing subscriptions.
     if (db_result(db_query("SELECT * FROM {uc_recurring_stripe} WHERE uid = %d", $user->uid))) {
       $result = db_query("SELECT * FROM {uc_recurring_stripe} WHERE uid = %d", $user->uid);
       while ($sub = db_fetch_object($result)) {
@@ -489,13 +486,13 @@ function uc_stripe_process($order, &$fee) {
     }
   }
 
-  // Create a new customer object if necessary
+  // Create a new customer object if necessary.
   if ($create_new) {
     $data['email'] = $order->primary_email;
     $data['description'] = $customer_name;
     try {
       $customer = Stripe_Customer::create($data);
-      // Write this customer record to our database
+      // Write this customer record to our database.
       $cust_record->uid = $user->uid;
       $cust_record->order_id = $order->order_id;
       $cust_record->customer_id = $customer->__get('id');
@@ -578,7 +575,7 @@ function uc_stripe_cancel($order, $op) {
   global $user;
   $plan_id = str_replace('/', '_', $order->data['model']);
 
-  // Must be logged in to cancel
+  // Must be logged in to cancel.
   if ($user->uid == 0) {
     return FALSE;
   }
@@ -591,7 +588,7 @@ function uc_stripe_cancel($order, $op) {
     }
   }
 
-  // Load the Stripe API and set the API key
+  // Load the Stripe API and set the API key.
   if (!_uc_stripe_load_api()) {
     return FALSE;
   }
@@ -657,7 +654,7 @@ function _uc_stripe_fancy_name($nid) {
       $result = db_query("SELECT * FROM {uc_recurring_product} WHERE pfid = %d", $pfid);
       $recurring = db_fetch_object($result);
       // If this product is recurring, we want to add the info to
-      //  its title display.
+      // its title display.
       $node = node_load($nid);
       $product = uc_product_load($node);
       $interval = drupal_substr($recurring->regular_interval, 2, -1);
@@ -674,7 +671,7 @@ function _uc_stripe_fancy_name($nid) {
  */
 function _uc_stripe_load_api() {
   if ($path = libraries_get_path('stripe')) {
-    // Load Stripe
+    // Load Stripe Library.
     include_once $path . '/lib/Stripe.php';
   }
   else {
