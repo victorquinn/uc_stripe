@@ -6,6 +6,26 @@
  */
 
 /**
+ * Implements hook_requirements().
+ */
+function uc_stripe_requirements($phase) {
+  $t = get_t();
+  $has_curl = function_exists('curl_init');
+
+  $requirements['uc_stripe_curl'] = array(
+    'title' => $t('cURL'),
+    'value' => $has_curl ? $t('Enabled') : $t('Not found'),
+  );
+
+  if (!$has_curl) {
+    $requirements['uc_stripe_curl']['severity'] = REQUIREMENT_ERROR;
+    $requirements['uc_stripe_curl']['description'] = $t("The Stripe API requires the PHP <a href='!curl_url'>cURL</a> library.", array('!curl_url' => 'http://php.net/manual/en/curl.setup.php'));
+  }
+
+  return $requirements;
+}
+
+/**
  * Implements hook_install().
  */
 function uc_stripe_install() {
