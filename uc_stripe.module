@@ -267,14 +267,14 @@ function uc_stripe_settings_form() {
   );
 
   $form['uc_stripe_settings']['uc_stripe_api_key_dev'] = array(
-    '#type' => 'textfield',
+    '#type' => 'password',
     '#title' => t('Stripe API Key (Development)'),
     '#default_value' => variable_get('uc_stripe_api_key_dev', ''),
     '#description' => t('Your Development Stripe API Key. Must be the "secret" key, not the "publishable" one.'),
   );
 
   $form['uc_stripe_settings']['uc_stripe_api_key_prod'] = array(
-    '#type' => 'textfield',
+    '#type' => 'password',
     '#title' => t('Stripe API Key (Production)'),
     '#default_value' => variable_get('uc_stripe_api_key_prod', ''),
     '#description' => t('Your Production Stripe API Key. Must be the "secret" key, not the "publishable" one.'),
