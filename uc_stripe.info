@@ -5,4 +5,4 @@ dependencies[] = uc_credit
 dependencies[] = libraries
 package = Ubercart - payment
 core = 6.x
-php = 5.0
+php = 5.2
