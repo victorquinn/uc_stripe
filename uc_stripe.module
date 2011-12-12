@@ -54,7 +54,7 @@ function uc_stripe_recurring_info() {
 function uc_stripe_form_uc_cart_checkout_form_alter(&$form, &$form_state) {
   // If testmode is enabled, display a message on checkout.
   if (uc_credit_default_gateway() == 'uc_stripe') {
-    if (variable_get('uc_stripe_testmode', FALSE)) {
+    if (variable_get('uc_stripe_testmode', TRUE)) {
       $form['panes']['testmode'] = array(
         '#prefix' => "<div class='messages' style='background-color:#BEEBBF'>",
         '#type' => 'markup',
@@ -284,7 +284,7 @@ function uc_stripe_settings_form() {
     '#type' => 'checkbox',
     '#title' => t('Test mode'),
     '#description' => 'Testing Mode: Stripe will use the development API key to process the transaction so the card will not actually be charged.',
-    '#default_value' => variable_get('uc_stripe_testmode', FALSE),
+    '#default_value' => variable_get('uc_stripe_testmode', TRUE),
   );
 
   $form['uc_stripe_settings']['uc_stripe_poweredby'] = array(
@@ -679,7 +679,7 @@ function _uc_stripe_load_api() {
     return FALSE;
   }
 
-  $apikey = variable_get('uc_stripe_testmode', FALSE) ? variable_get('uc_stripe_api_key_dev', '') : variable_get('uc_stripe_api_key_prod', '');
+  $apikey = variable_get('uc_stripe_testmode', TRUE) ? variable_get('uc_stripe_api_key_dev', '') : variable_get('uc_stripe_api_key_prod', '');
 
   if ($apikey == '') {
     watchdog('uc_stripe', 'No Stripe API key is set. Payment cannot go through until set.', array(), WATCHDOG_WARNING);
