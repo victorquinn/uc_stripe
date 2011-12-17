@@ -159,17 +159,17 @@ function uc_stripe_product_feature_validate($form, &$form_state) {
 
   // First, ensure the user has selected a SKU.
   if ($form_state['values']['model'] == '') {
-    form_set_error('model', "You must select an Applicable SKU for payments to work with Stripe.");
+    form_set_error('model', t("You must select an Applicable SKU for payments to work with Stripe."));
     return FALSE;
   }
 
   if ($form_state['values']['regular_interval_unit'] == 'days' || $form_state['values']['regular_interval_unit'] == 'weeks') {
-    form_set_error('regular_interval_unit', "Stripe only allows intervals of months or years. Invalid value given.");
+    form_set_error('regular_interval_unit', t("Stripe only allows intervals of months or years. Invalid value given."));
     return FALSE;
   }
 
   if ($form_state['values']['regular_interval_value'] > 1) {
-    form_set_error('regular_interval_value', "Stripe only allows intervals of 1 month or 1 year.");
+    form_set_error('regular_interval_value', t("Stripe only allows intervals of 1 month or 1 year."));
     return FALSE;
   }
 
@@ -187,7 +187,7 @@ function uc_stripe_product_feature_validate($form, &$form_state) {
   // We want to programmatically create a Stripe subscription plan
   // for this item.
   if (!_uc_stripe_load_api()) {
-    form_set_error('', "There was a problem loading the Stripe API. Recurring feature could not be created. Please ensure the API is in sites/all/libraries/stripe.");
+    form_set_error('', t("There was a problem loading the Stripe API. Recurring feature could not be created. Please ensure the API is in sites/all/libraries/stripe."));
     return FALSE;
   }
 
@@ -420,7 +420,7 @@ function uc_stripe_process($order, &$fee) {
 
   if (count($nid) > 1) {
     watchdog('uc_stripe', "Multiple subscriptions in cart. User %user warned.", array('%user' => $user->name));
-    drupal_set_message(t("Currently, only one subscription may be purchased at one time. Please purchase one subscription, then purchase another as a separate order. We apologize for the convenience."), 'error');
+    drupal_set_message(t("Currently, only one subscription may be purchased at one time. Please purchase one subscription, then purchase another as a separate order. We apologize for the inconvenience."), 'error');
     return FALSE;
   }
   $nid = $nid[0];
@@ -659,7 +659,7 @@ function _uc_stripe_fancy_name($nid) {
       $product = uc_product_load($node);
       $interval = drupal_substr($recurring->regular_interval, 2, -1);
       $fee = number_format($recurring->fee_amount, 2);
-      $title = "{$node->title} (\${$fee}/{$interval} starting in {$recurring->initial_charge})";
+      $title = t("{$node->title} (\${$fee}/{$interval} starting in {$recurring->initial_charge})");
       return $title;
     }
   }
@@ -704,7 +704,7 @@ function _uc_stripe_post_transaction($order_id, $data) {
     $charge_object = Stripe_Charge::create($data);
     $result = array(
       'success' => TRUE,
-      'message' => t('Credit card payment processed successfully. Tr'),
+      'message' => t('Credit card payment processed successfully.'),
       'uid' => $user->uid,
       'trans_id' => $charge_object->__get('id'),
     );
