@@ -315,9 +315,22 @@ function uc_stripe_charge($order_id, $amount, $data) {
   if (drupal_strlen($order->payment_details['cc_exp_month']) == 1) {
     $order->payment_details['cc_exp_month'] = '0' . $order->payment_details['cc_exp_month'];
   }
+
+  $context = array(
+    'revision' => 'formatted-original',
+    'type' => 'amount',
+  );
+
+  $options = array(
+    'sign' => FALSE,
+    'thou' => FALSE,
+    'dec'  => FALSE,
+    'prec' => 2,
+  );
+
   // Set up minimum fields.
   $data = array(
-    'amount' => intval($amount * 100),
+    'amount' => uc_price($amount, $context, $options),
     'currency' => 'usd',
     'card' => array(
       'number' => $order->payment_details['cc_number'],
